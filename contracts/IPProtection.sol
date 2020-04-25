@@ -80,7 +80,7 @@ contract IPProtection is Killable {
     Design storage design = designs[designId];
 
     if(design.usedBy[msg.sender]) {
-         require(msg.value > 0, "You have already used this design once. You must pay to use it again");
+         require(msg.value >= 1000, "You must pay at least 1000 wei to use this design again");
     }
 
     design.usedBy[msg.sender] = true;

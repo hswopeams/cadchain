@@ -168,21 +168,21 @@ contract("CADChain Error Test", async accounts => {
 
     await truffleAssert.reverts(
         instance.useDesign(1, {from: bob}),
-        "You have already used this design once. You must pay to use it again"
+        "You must pay at least 1000 wei to use this design again"
     );        
 
     await instance.useDesign(1, {from: dan}),
 
     await truffleAssert.reverts(
-        instance.useDesign(1, {from: dan}),
-        "You have already used this design once. You must pay to use it again"
+        instance.useDesign(1, {from: dan, value: 500}),
+        "You must pay at least 1000 wei to use this design again"
     );  
 
     await instance.useDesign(2, {from: dan}),
 
     await truffleAssert.reverts(
         instance.useDesign(2, {from: dan}),
-        "You have already used this design once. You must pay to use it again"
+        "You must pay at least 1000 wei to use this design again"
     );
   });
 
