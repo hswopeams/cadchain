@@ -69,15 +69,17 @@ contract("CADChain Happy Flow Test", async accounts => {
     assert.strictEqual(txObj.receipt.logs.length, 1, 'Incorrect number of events emitted');
 
   });
-/*
+
   it('should allow owner to transfer contract balance to a safeguard address when killed', async () => {
+    const contentPointer1 = await web3.utils.toHex("ValvePointer");
+
     await instance.registerPrinter(bob, {from: owner});
     await instance.registerDesigner(alice, {from: owner});
-    await instance.protectDesign(web3.utils.toHex("Valve"), {from: alice});
+    await instance.protectDesign(contentPointer1, {from: alice});
    
 
-    await instance.useDesign(1, {from: bob});
-    await instance.useDesign(1, {from: bob, value: 1000});
+    await instance.useDesign(contentPointer1, {from: bob});
+    await instance.useDesign(contentPointer1, {from: bob, value: 1000});
 
     const contractBalance = await web3.eth.getBalance(instance.address);
     const safeguardStartingBalance = await web3.eth.getBalance(safeguard);
@@ -103,9 +105,12 @@ contract("CADChain Happy Flow Test", async accounts => {
     });  
 
     assert.strictEqual(txObj.receipt.logs.length, 1, 'Incorrect number of events emitted');
-   
+    
+     //check balance data is still available so funds can be returned to sender accounts
+     const contractBalanceAlice = await instance.balances(alice);
+     expect(contractBalanceAlice).to.eq.BN(1000);
   });
-  */
+
 
   it('should allow owner to register a designer', async () => {
     const txObj = await instance.registerDesigner(alice, {from: owner});
