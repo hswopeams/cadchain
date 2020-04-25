@@ -69,7 +69,7 @@ contract("CADChain Happy Flow Test", async accounts => {
     assert.strictEqual(txObj.receipt.logs.length, 1, 'Incorrect number of events emitted');
 
   });
-
+/*
   it('should allow owner to transfer contract balance to a safeguard address when killed', async () => {
     await instance.registerPrinter(bob, {from: owner});
     await instance.registerDesigner(alice, {from: owner});
@@ -105,6 +105,7 @@ contract("CADChain Happy Flow Test", async accounts => {
     assert.strictEqual(txObj.receipt.logs.length, 1, 'Incorrect number of events emitted');
    
   });
+  */
 
   it('should allow owner to register a designer', async () => {
     const txObj = await instance.registerDesigner(alice, {from: owner});
@@ -146,102 +147,86 @@ contract("CADChain Happy Flow Test", async accounts => {
 
   it('should allow a designer to protect her design', async () => {
     await instance.registerDesigner(alice, {from: owner});
-    const txObj = await instance.protectDesign(web3.utils.toHex("Valve"), {from: alice});
+    const txObj = await instance.protectDesign(web3.utils.toHex("ValvePointer"), {from: alice});
     truffleAssert.eventEmitted(txObj.receipt, 'LogDesignProtected', (ev) => {    
-        //console.log("nameFromEvent ", web3.utils.hexToAscii(ev.name));
-        return ev.designer == alice && expect(ev.id).to.eq.BN(1);
+       // console.log("pointer from event ", web3.utils.hexToAscii(ev.hashedContentPointer));
+        return ev.designer == alice;
     });    
   });
 
-  it('should allow a designer to protect a design with diacritics in the name', async () => {
-    await instance.registerDesigner(alice, {from: owner});
-    const txObj = await instance.protectDesign(web3.utils.toHex("ëçà"), {from: alice});
-    truffleAssert.eventEmitted(txObj.receipt, 'LogDesignProtected', (ev) => {    
-        //console.log("nameFromEvent ", web3.utils.hexToAscii(ev.name));
-        return ev.designer == alice && expect(ev.id).to.eq.BN(1);
-    });    
-  });
-
-  it('should increase counter correctly when designs are protected', async () => {
-    await instance.registerDesigner(alice, {from: owner});
-    const txObj = await instance.protectDesign(web3.utils.toHex("Valve"), {from: alice});
-    truffleAssert.eventEmitted(txObj.receipt, 'LogDesignProtected', (ev) => {    
-        //console.log("nameFromEvent ", web3.utils.hexToAscii(ev.name));
-        return ev.designer == alice && expect(ev.id).to.eq.BN(1);
-    });    
-
-    let counter = await instance.counter();
-    expect(counter).to.eq.BN(1);
-
-    const txObj2 = await instance.protectDesign(web3.utils.toHex("Mask"), {from: alice});
-    truffleAssert.eventEmitted(txObj2.receipt, 'LogDesignProtected', (ev) => {    
-        //console.log("nameFromEvent ", web3.utils.hexToAscii(ev.name));
-        return ev.designer == alice && expect(ev.id).to.eq.BN(2);
-    }); 
-
-    counter = await instance.counter();
-    expect(counter).to.eq.BN(2);
-  });
-
+    
   it('should allow a printer to use a design once for free', async () => {
+    const contentPointer = await web3.utils.toHex("ValvePointer");
     await instance.registerDesigner(alice, {from: owner});
     await instance.registerPrinter(bob, {from: owner});
-    await instance.protectDesign(web3.utils.toHex("Valve"), {from: alice});
+    await instance.protectDesign(contentPointer, {from: alice});
 
-    const txObj = await instance.useDesign(1, {from: bob});
+    const txObj = await instance.useDesign(contentPointer, {from: bob});
 
     truffleAssert.eventEmitted(txObj.receipt, 'LogDesignUseApproved', (ev) => {    
-        return ev.printer == bob && expect(ev.designId).to.eq.BN(1) && expect(ev.approved).to.be.true;
+        //console.log("pointer from event ", web3.utils.hexToAscii(ev.hashedContentPointer));
+        return ev.printer == bob && expect(ev.approved).to.be.true;
     });    
   });
 
+
   it('should accept payment from printer for subsequent requests and add funds to designer balance', async () => {
+    const contentPointer = await web3.utils.toHex("ValvePointer");
     await instance.registerPrinter(bob, {from: owner});
     await instance.registerDesigner(alice, {from: owner});
-    await instance.protectDesign(web3.utils.toHex("Valve"), {from: alice});
+    await instance.protectDesign(contentPointer, {from: alice});
    
 
-    await instance.useDesign(1, {from: bob});
-    await instance.useDesign(1, {from: bob, value: 1000});
-    await instance.useDesign(1, {from: bob, value: 2500});
+    const txObj = await instance.useDesign(contentPointer, {from: bob});
+    await instance.useDesign(contentPointer, {from: bob, value: 1000});
+    await instance.useDesign(contentPointer, {from: bob, value: 2500});
 
     const newContractBalanceAlice = new BN(await instance.balances(alice));
     expect(newContractBalanceAlice).to.eq.BN(3500);
+
+    truffleAssert.eventEmitted(txObj.receipt, 'LogDesignUseApproved', (ev) => {    
+        //console.log("pointer from event ", web3.utils.hexToAscii(ev.hashedContentPointer));
+        return ev.printer == bob && expect(ev.approved).to.be.true;
+    });    
        
   });
 
+
   it('should allow use of multiple designs by a printer and add funds to correct designer\'s balance', async () => {
+    const contentPointer1= await web3.utils.toHex("ValvePointer");
+    const contentPointer2= await web3.utils.toHex("MaskPointer");
+
     await instance.registerDesigner(alice, {from: owner});
     await instance.registerDesigner(carol, {from: owner});
     await instance.registerPrinter(bob, {from: owner});
-    await instance.protectDesign(web3.utils.toHex("Valve"), {from: alice});
-    await instance.protectDesign(web3.utils.toHex("Mask"), {from: carol});
+    await instance.protectDesign(contentPointer1, {from: alice});
+    await instance.protectDesign(contentPointer2, {from: carol});
 
     //Use Carol's design
-    const txObj = await instance.useDesign(2, {from: bob});
+    const txObj = await instance.useDesign(contentPointer2, {from: bob});
 
     truffleAssert.eventEmitted(txObj.receipt, 'LogDesignUseApproved', (ev) => {    
-        return ev.printer == bob && expect(ev.designId).to.eq.BN(2) && expect(ev.approved).to.be.true;
+        return ev.printer == bob && expect(ev.approved).to.be.true;
     });  
 
-    const txObj2 = await instance.useDesign(2, {from: bob, value: 1000});
+    const txObj2 = await instance.useDesign(contentPointer2, {from: bob, value: 1000});
 
     truffleAssert.eventEmitted(txObj2.receipt, 'LogDesignUseApproved', (ev) => {    
-        return ev.printer == bob && expect(ev.designId).to.eq.BN(2) && expect(ev.approved).to.be.true;
+        return ev.printer == bob && expect(ev.approved).to.be.true;
     });  
        
 
     //User Alice's design
-    const txObj3 = await instance.useDesign(1, {from: bob});
+    const txObj3 = await instance.useDesign(contentPointer1, {from: bob});
 
     truffleAssert.eventEmitted(txObj3.receipt, 'LogDesignUseApproved', (ev) => {    
-        return ev.printer == bob && expect(ev.designId).to.eq.BN(1) && expect(ev.approved).to.be.true;
+        return ev.printer == bob && expect(ev.approved).to.be.true;
     });  
 
-    const txObj4 = await instance.useDesign(1, {from: bob, value: 5000});
+    const txObj4 = await instance.useDesign(contentPointer1, {from: bob, value: 5000});
 
     truffleAssert.eventEmitted(txObj4.receipt, 'LogDesignUseApproved', (ev) => {    
-        return ev.printer == bob && expect(ev.designId).to.eq.BN(1) && expect(ev.approved).to.be.true;
+        return ev.printer == bob && expect(ev.approved).to.be.true;
     });  
 
     const newContractBalanceCarol = new BN(await instance.balances(carol));
@@ -251,32 +236,38 @@ contract("CADChain Happy Flow Test", async accounts => {
     expect(newContractBalanceAlice).to.eq.BN(5000);
   });
 
+ 
   it('should correctly determine whether or not multiple printers have used various designs', async () => {
+    const contentPointer1 = await web3.utils.toHex("ValvePointer");
+
     await instance.registerPrinter(bob, {from: owner});
     await instance.registerPrinter(dan, {from: owner});
     await instance.registerDesigner(alice, {from: owner});
-    await instance.protectDesign(web3.utils.toHex("Valve"), {from: alice});
+    await instance.protectDesign(contentPointer1, {from: alice});
    
 
-    await instance.useDesign(1, {from: bob});
-    await instance.useDesign(1, {from: dan});
+    await instance.useDesign(contentPointer1, {from: bob});
+    await instance.useDesign(contentPointer1, {from: dan});
 
 
-    await instance.useDesign(1, {from: dan, value: 1000});
-    await instance.useDesign(1, {from: bob, value: 2500});
+    await instance.useDesign(contentPointer1, {from: dan, value: 1000});
+    await instance.useDesign(contentPointer1, {from: bob, value: 2500});
 
     const newContractBalanceAlice = new BN(await instance.balances(alice));
     expect(newContractBalanceAlice).to.eq.BN(3500);
        
   });
 
+  
   it('should allow designer to withdraw her funds', async () => {
+    const contentPointer1 = await web3.utils.toHex("ValvePointer");
+
     await instance.registerDesigner(alice, {from: owner});
     await instance.registerPrinter(bob, {from: owner});
-    await instance.protectDesign(web3.utils.toHex("Valve"), {from: alice});
+    await instance.protectDesign(contentPointer1, {from: alice});
 
-    await instance.useDesign(1, {from: bob});
-    await instance.useDesign(1, {from: bob, value: 2500});
+    await instance.useDesign(contentPointer1, {from: bob});
+    await instance.useDesign(contentPointer1, {from: bob, value: 2500});
     
     const startingAccountBalanceAlice = new BN(await web3.eth.getBalance(alice));
     const txObj = await instance.withdrawFunds({ from: alice });
@@ -299,18 +290,22 @@ contract("CADChain Happy Flow Test", async accounts => {
     assert.equal(txObj.receipt.logs.length, 1, 'Incorrect number of events emitted');
   });
 
-it('should allow the correct designer to withdraw the correctfunds', async () => {
+ 
+  it('should allow the correct designer to withdraw the correctfunds', async () => {
+    const contentPointer1 = await web3.utils.toHex("ValvePointer");
+    const contentPointer2 = await web3.utils.toHex("MaskPointer");
+
     await instance.registerDesigner(alice, {from: owner});
     await instance.registerDesigner(carol, {from: owner});
     await instance.registerPrinter(bob, {from: owner});
-    await instance.protectDesign(web3.utils.toHex("Valve"), {from: alice});
-    await instance.protectDesign(web3.utils.toHex("Mask"), {from: carol});
+    await instance.protectDesign(contentPointer1, {from: alice});
+    await instance.protectDesign(contentPointer2, {from: carol});
 
-    await instance.useDesign(1, {from: bob});
-    await instance.useDesign(1, {from: bob, value: 2500});
+    await instance.useDesign(contentPointer1, {from: bob});
+    await instance.useDesign(contentPointer1, {from: bob, value: 2500});
 
-    await instance.useDesign(2, {from: bob});
-    await instance.useDesign(2, {from: bob, value: 1000});
+    await instance.useDesign(contentPointer2, {from: bob});
+    await instance.useDesign(contentPointer2, {from: bob, value: 1000});
     
     //Alice
     const startingAccountBalanceAlice = new BN(await web3.eth.getBalance(alice));
@@ -354,6 +349,8 @@ it('should allow the correct designer to withdraw the correctfunds', async () =>
      });   
  
      assert.equal(txObj.receipt.logs.length, 1, 'Incorrect number of events emitted');
-});
 
+  });
+
+ 
 });//end test contract

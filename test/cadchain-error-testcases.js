@@ -12,6 +12,7 @@ contract("CADChain Error Test", async accounts => {
   let instance;
   let owner,alice,bob,carol,dan,ellen,frank, safeguard;
   const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+  const INVALID_IDENTIFIER = ['0x0000000000000000000000000000000000000000000000000000000000000000','0x00','0x0'];
 
 
 
@@ -47,16 +48,18 @@ contract("CADChain Error Test", async accounts => {
   });
 
   it('should not allow certain functions to be called if the contract has been killed', async () => {
+    const contentPointer1 = await web3.utils.toHex("ValvePointer");
+
     await instance.pause({ from: owner });
     await instance.kill({ from: owner });
   
     await truffleAssert.reverts(
-        instance.protectDesign(alice, {from: owner}),
+        instance.protectDesign(contentPointer1, {from: owner}),
         "Killable: killed"
     );
 
     await truffleAssert.reverts(
-        instance.useDesign(alice, {from: owner}),
+        instance.useDesign(contentPointer1, {from: owner}),
         "Killable: killed"
     );  
   
@@ -122,88 +125,123 @@ contract("CADChain Error Test", async accounts => {
 
   it('should revert if unregistered designer tries to protect design', async () => {
     await truffleAssert.reverts(
-        instance.protectDesign(web3.utils.toHex("Valve"), {from: alice}),
+        instance.protectDesign(web3.utils.toHex("ValvePointer"), {from: alice}),
         "Message sender is not a registered designer"
     );        
   });
 
-  it('should revert if design id is not known when trying to use design', async () => {
+  it('should revert if design has already been protected by same designer', async () => {
     await instance.registerDesigner(alice, {from: owner});
-    await instance.registerPrinter(bob, {from: owner});
-    await instance.protectDesign(web3.utils.toHex("Valve"), {from: alice});
+    await instance.protectDesign(web3.utils.toHex("ValvePointer"), {from: alice}),
 
     await truffleAssert.reverts(
-        instance.useDesign(2, {from: bob}),
+        instance.protectDesign(web3.utils.toHex("ValvePointer"), {from: alice}),
+        "Design already protected"
+    );        
+  });
+
+  it('should revert if design has already been protected by different designer', async () => {
+    await instance.registerDesigner(alice, {from: owner});
+    await instance.registerDesigner(carol, {from: owner});
+    await instance.protectDesign(web3.utils.toHex("ValvePointer"), {from: alice}),
+
+    await truffleAssert.reverts(
+        instance.protectDesign(web3.utils.toHex("ValvePointer"), {from: carol}),
+        "Design already protected"
+    );        
+  });
+
+  
+  it('should revert if design id is not protected when trying to use design', async () => {
+    const contentPointer1 = await web3.utils.toHex("ValvePointer");
+    const contentPointer2 = await web3.utils.toHex("MaskPointer");
+
+    await instance.registerDesigner(alice, {from: owner});
+    await instance.registerPrinter(bob, {from: owner});
+    await instance.protectDesign(contentPointer1, {from: alice});
+
+    await truffleAssert.reverts(
+        instance.useDesign(contentPointer2, {from: bob}),
         "Invalid design id"
     );        
   });
+
 
   it('should revert if design id is 0 when trying to use design', async () => {
-    await instance.registerDesigner(alice, {from: owner});
     await instance.registerPrinter(bob, {from: owner});
-    await instance.protectDesign(web3.utils.toHex("Valve"), {from: alice});
-
+   
     await truffleAssert.reverts(
-        instance.useDesign(0, {from: bob}),
+        instance.useDesign(INVALID_IDENTIFIER, {from: bob}),
         "Invalid design id"
     );        
   });
 
+  
   it('should revert if printer tries to use design before any designs have been protected', async () => {
+    const contentPointer1 = await web3.utils.toHex("ValvePointer");
+
     await instance.registerPrinter(bob, {from: owner});
     await instance.registerDesigner(alice, {from: owner})
     await truffleAssert.reverts(
-        instance.useDesign(0, {from: bob}),
+        instance.useDesign(contentPointer1, {from: bob}),
         "Invalid design id"
     );        
   });
 
+ 
   it('should revert if printer has already used design and does not pay this time', async () => {
+    const contentPointer1 = await web3.utils.toHex("ValvePointer");
+    const contentPointer2 = await web3.utils.toHex("MaskPointer");
+
     await instance.registerDesigner(alice, {from: owner});
     await instance.registerPrinter(bob, {from: owner});
     await instance.registerPrinter(dan, {from: owner});
-    await instance.protectDesign(web3.utils.toHex("Valve"), {from: alice});
-    await instance.protectDesign(web3.utils.toHex("Mask"), {from: alice});
-    await instance.useDesign(1, {from: bob}),
+    await instance.protectDesign(contentPointer1, {from: alice});
+    await instance.protectDesign(contentPointer2, {from: alice});
+    await instance.useDesign(contentPointer1, {from: bob}),
 
     await truffleAssert.reverts(
-        instance.useDesign(1, {from: bob}),
+        instance.useDesign(contentPointer1, {from: bob}),
         "You must pay at least 1000 wei to use this design again"
     );        
 
-    await instance.useDesign(1, {from: dan}),
+    await instance.useDesign(contentPointer1, {from: dan}),
 
     await truffleAssert.reverts(
-        instance.useDesign(1, {from: dan, value: 500}),
+        instance.useDesign(contentPointer1, {from: dan, value: 500}),
         "You must pay at least 1000 wei to use this design again"
     );  
 
-    await instance.useDesign(2, {from: dan}),
+    await instance.useDesign(contentPointer2, {from: dan}),
 
     await truffleAssert.reverts(
-        instance.useDesign(2, {from: dan}),
+        instance.useDesign(contentPointer2, {from: dan}),
         "You must pay at least 1000 wei to use this design again"
     );
   });
 
+  
   it('should revert if unregistered designer tries to withdraw funds', async () => {
     await truffleAssert.reverts(
         instance.withdrawFunds({from: carol}),
         "Message sender is not a registered designer"
     );        
   });
-
+ 
   it('should revert if designer has no funds to withdraw', async () => {
+    const contentPointer1 = await web3.utils.toHex("ValvePointer");
+
     await instance.registerDesigner(alice, {from: owner});
     await instance.registerPrinter(bob, {from: owner});
-    await instance.protectDesign(web3.utils.toHex("Valve"), {from: alice});
-    await instance.useDesign(1, {from: bob}),
+    await instance.protectDesign(contentPointer1, {from: alice});
+    await instance.useDesign(contentPointer1, {from: bob}),
 
 
    await truffleAssert.reverts(
       instance.withdrawFunds({from: alice}),
       "No funds to withdraw"
    );        
-});
+  });
+  
 
 });//end test contract

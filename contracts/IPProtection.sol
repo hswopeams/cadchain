@@ -8,15 +8,11 @@ contract IPProtection is Killable {
 
   struct Design {
     address owner;
-    uint256 id;
-    bytes32 name;
     uint256 registrationDateTime;
     mapping (address => bool) usedBy;
   }
 
-  uint256 public counter;
-  //mapping (address => Design) public designs;
-  mapping (uint256 => Design) public designs;
+  mapping (bytes32 => Design) public designs;
   mapping (address => uint256) public balances;
   mapping (address => bool) registeredDesigners;
   mapping (address => bool) registeredPrinters;
@@ -25,8 +21,8 @@ contract IPProtection is Killable {
   event LogDesignerDeregistered(address indexed designer);
   event LogPrinterRegistered(address indexed printer);
   event LogPrinterDeregistered(address indexed printer);
-  event LogDesignProtected(address indexed designer, bytes32 indexed name, uint256 id);
-  event LogDesignUseApproved(address indexed printer, uint256 indexed designId, bool approved, uint256 designerBalance);
+  event LogDesignProtected(address indexed designer, bytes32 hashedContentPointer);
+  event LogDesignUseApproved(address indexed printer, bytes32 hashedContentPointer, bool approved, uint256 designerBalance);
   event LogFundsWithdrawn(address indexed designer, uint256 balanceWithdrawn);
 
   
@@ -66,18 +62,19 @@ contract IPProtection is Killable {
       return true;
   }
 
-  function protectDesign(bytes32 name) public whenAlive {
+  function protectDesign(bytes32 hashedContentPointer) public whenAlive {
     require(registeredDesigners[msg.sender], "Message sender is not a registered designer");
-    counter = ++counter;
-    designs[counter] = Design(msg.sender, counter, name, now);
-    emit LogDesignProtected(msg.sender, name, counter);
+    require(designs[hashedContentPointer].owner == address(0), "Design already protected");
+    designs[hashedContentPointer] = Design(msg.sender, now);
+    emit LogDesignProtected(msg.sender, hashedContentPointer);
   }
 
-  function useDesign(uint256 designId) public payable whenAlive {
-    require(registeredPrinters[msg.sender], "Printer not registered");
-    require(designs[designId].owner != address(0), "Invalid design id");
 
-    Design storage design = designs[designId];
+  function useDesign(bytes32 hashedContentPointer) public payable whenAlive {
+    require(registeredPrinters[msg.sender], "Printer not registered");
+    require(designs[hashedContentPointer].owner != address(0), "Invalid design id");
+
+    Design storage design = designs[hashedContentPointer];
 
     if(design.usedBy[msg.sender]) {
          require(msg.value >= 1000, "You must pay at least 1000 wei to use this design again");
@@ -86,10 +83,9 @@ contract IPProtection is Killable {
     design.usedBy[msg.sender] = true;
     balances[design.owner] = balances[design.owner].add(msg.value);
    
-    emit LogDesignUseApproved(msg.sender, designId, true, balances[design.owner]);
-
+    emit LogDesignUseApproved(msg.sender, hashedContentPointer, true, balances[design.owner]);
   }
-
+  
   function withdrawFunds() public whenAlive {
         require(registeredDesigners[msg.sender], "Message sender is not a registered designer");
 
@@ -100,7 +96,6 @@ contract IPProtection is Killable {
  
         (bool success, ) = msg.sender.call.value(amount)("");
         require(success, "Transfer failed.");
-   
     }
 
 }
