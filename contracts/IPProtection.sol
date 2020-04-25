@@ -1,10 +1,13 @@
 pragma solidity >=0.4.25 <0.6.0;
 
 import "./Killable.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 contract IPProtection is Killable {
+    using SafeMath for uint256;
 
   struct Design {
+    address owner;
     uint256 id;
     bytes32 name;
     uint256 registrationDateTime;
@@ -12,7 +15,8 @@ contract IPProtection is Killable {
   }
 
   uint256 public counter;
-  mapping (address => Design) public designs;
+  //mapping (address => Design) public designs;
+  mapping (uint256 => Design) public designs;
   mapping (address => uint256) public balances;
   mapping (address => bool) registeredDesigners;
   mapping (address => bool) registeredPrinters;
@@ -22,7 +26,8 @@ contract IPProtection is Killable {
   event LogPrinterRegistered(address indexed printer);
   event LogPrinterDeregistered(address indexed printer);
   event LogDesignProtected(address indexed designer, bytes32 indexed name, uint256 id);
-  event LogDesignPurchaseApproved(address indexed printer, uint256 indexed designId, bool approved);
+  event LogDesignUseApproved(address indexed printer, uint256 indexed designId, bool approved, uint256 designerBalance);
+
   
   constructor() public {}
 
@@ -63,11 +68,26 @@ contract IPProtection is Killable {
   function protectDesign(bytes32 name) public whenAlive {
     require(registeredDesigners[msg.sender], "Message sender is not a registered designer");
     counter = ++counter;
-    designs[msg.sender] = Design(counter, name, now);
+    designs[counter] = Design(msg.sender, counter, name, now);
     emit LogDesignProtected(msg.sender, name, counter);
   }
 
+  function useDesign(uint256 designId) public payable whenAlive {
+    require(registeredPrinters[msg.sender], "Printer not registered");
+    require(designs[designId].owner != address(0), "Invalid design id");
 
+    Design storage design = designs[designId];
+
+    if(design.usedBy[msg.sender]) {
+         require(msg.value > 0, "You have already used this design once. You must pay to use it again");
+    }
+
+    design.usedBy[msg.sender] = true;
+    balances[design.owner] = balances[design.owner].add(msg.value);
+   
+    emit LogDesignUseApproved(msg.sender, designId, true, balances[design.owner]);
+
+  }
 
 }
 

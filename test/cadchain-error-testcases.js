@@ -7,7 +7,7 @@ const assert = chai.assert;
 const expect = chai.expect;
 const truffleAssert = require('truffle-assertions');
 
-contract("CADChain Happy Flow Test", async accounts => {
+contract("CADChain Error Test", async accounts => {
 
   let instance;
   let owner,alice,bob,carol,dan,ellen,frank, safeguard;
@@ -120,6 +120,65 @@ contract("CADChain Happy Flow Test", async accounts => {
         instance.protectDesign(web3.utils.toHex("Valve"), {from: alice}),
         "Message sender is not a registered designer"
     );        
+  });
+
+  it('should revert if design id is not known when trying to use design', async () => {
+    await instance.registerDesigner(alice, {from: owner});
+    await instance.registerPrinter(bob, {from: owner});
+    await instance.protectDesign(web3.utils.toHex("Valve"), {from: alice});
+
+    await truffleAssert.reverts(
+        instance.useDesign(2, {from: bob}),
+        "Invalid design id"
+    );        
+  });
+
+  it('should revert if design id is 0 when trying to use design', async () => {
+    await instance.registerDesigner(alice, {from: owner});
+    await instance.registerPrinter(bob, {from: owner});
+    await instance.protectDesign(web3.utils.toHex("Valve"), {from: alice});
+
+    await truffleAssert.reverts(
+        instance.useDesign(0, {from: bob}),
+        "Invalid design id"
+    );        
+  });
+
+  it('should revert if printer tries to use design before any designs have been protected', async () => {
+    await instance.registerPrinter(bob, {from: owner});
+    await instance.registerDesigner(alice, {from: owner})
+    await truffleAssert.reverts(
+        instance.useDesign(0, {from: bob}),
+        "Invalid design id"
+    );        
+  });
+
+  it('should revert if printer has already used design and does not pay this time', async () => {
+    await instance.registerDesigner(alice, {from: owner});
+    await instance.registerPrinter(bob, {from: owner});
+    await instance.registerPrinter(dan, {from: owner});
+    await instance.protectDesign(web3.utils.toHex("Valve"), {from: alice});
+    await instance.protectDesign(web3.utils.toHex("Mask"), {from: alice});
+    await instance.useDesign(1, {from: bob}),
+
+    await truffleAssert.reverts(
+        instance.useDesign(1, {from: bob}),
+        "You have already used this design once. You must pay to use it again"
+    );        
+
+    await instance.useDesign(1, {from: dan}),
+
+    await truffleAssert.reverts(
+        instance.useDesign(1, {from: dan}),
+        "You have already used this design once. You must pay to use it again"
+    );  
+
+    await instance.useDesign(2, {from: dan}),
+
+    await truffleAssert.reverts(
+        instance.useDesign(2, {from: dan}),
+        "You have already used this design once. You must pay to use it again"
+    );
   });
 
 });//end test contract
