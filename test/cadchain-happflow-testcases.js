@@ -70,6 +70,42 @@ contract("CADChain Happy Flow Test", async accounts => {
 
   });
 
+  it('should allow owner to transfer contract balance to a safeguard address when killed', async () => {
+    await instance.registerPrinter(bob, {from: owner});
+    await instance.registerDesigner(alice, {from: owner});
+    await instance.protectDesign(web3.utils.toHex("Valve"), {from: alice});
+   
+
+    await instance.useDesign(1, {from: bob});
+    await instance.useDesign(1, {from: bob, value: 1000});
+
+    const contractBalance = await web3.eth.getBalance(instance.address);
+    const safeguardStartingBalance = await web3.eth.getBalance(safeguard);
+
+    expect(contractBalance).to.eq.BN(1000);
+
+    await instance.pause({ from: owner });
+    await instance.kill({ from: owner });
+    const killed = await instance.isKilled({ from: owner });
+    assert.isTrue(killed, 'the contract has not been killed');
+
+    const txObj =  await instance.safeguardFunds(safeguard);
+   
+    const newContractBalance = await web3.eth.getBalance(instance.address);
+    const safeguardBalance = await web3.eth.getBalance(safeguard);
+    const expectedSafeguardBalance = new BN(safeguardStartingBalance).add(new BN(contractBalance));
+
+    expect(newContractBalance).to.eq.BN(0);
+    expect(safeguardBalance).to.eq.BN(expectedSafeguardBalance);
+
+    truffleAssert.eventEmitted(txObj.receipt, 'LogFundsSafeguarded', (ev) => {    
+        return ev.recipient == safeguard && expect(ev.amount).to.eq.BN(contractBalance);
+    });  
+
+    assert.strictEqual(txObj.receipt.logs.length, 1, 'Incorrect number of events emitted');
+   
+  });
+
   it('should allow owner to register a designer', async () => {
     const txObj = await instance.registerDesigner(alice, {from: owner});
     truffleAssert.eventEmitted(txObj.receipt, 'LogDesignerRegistered', (ev) => {   
