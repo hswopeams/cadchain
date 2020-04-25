@@ -234,4 +234,90 @@ contract("CADChain Happy Flow Test", async accounts => {
        
   });
 
+  it('should allow designer to withdraw her funds', async () => {
+    await instance.registerDesigner(alice, {from: owner});
+    await instance.registerPrinter(bob, {from: owner});
+    await instance.protectDesign(web3.utils.toHex("Valve"), {from: alice});
+
+    await instance.useDesign(1, {from: bob});
+    await instance.useDesign(1, {from: bob, value: 2500});
+    
+    const startingAccountBalanceAlice = new BN(await web3.eth.getBalance(alice));
+    const txObj = await instance.withdrawFunds({ from: alice });
+    const withdrawGasPrice = (await web3.eth.getTransaction(txObj.tx)).gasPrice;
+    const withdrawTxPrice = withdrawGasPrice * txObj.receipt.gasUsed;
+    const newAccountBalanceAlice = new BN(await web3.eth.getBalance(alice));
+
+    //Alice's balance after calling withdrawFunds() = Alice's balance before calling withdrawFunds() plus amount withdrawn minus price of calling withdrawFunds()
+    const expectedAccountBalance = startingAccountBalanceAlice.add(new BN(2500)).sub(new BN(withdrawTxPrice));      
+    expect(new BN(newAccountBalanceAlice).eq(new BN(expectedAccountBalance))).to.be.true; 
+
+    const newContraceBalanceAlice = await instance.balances(alice, { from: alice });
+    expect(newContraceBalanceAlice.eq(new BN(0))).to.be.true; 
+
+
+    truffleAssert.eventEmitted(txObj.receipt, 'LogFundsWithdrawn', (ev) => {    
+        return ev.designer == alice && ev.balanceWithdrawn == 2500 ;
+    });   
+
+    assert.equal(txObj.receipt.logs.length, 1, 'Incorrect number of events emitted');
+  });
+
+it('should allow the correct designer to withdraw the correctfunds', async () => {
+    await instance.registerDesigner(alice, {from: owner});
+    await instance.registerDesigner(carol, {from: owner});
+    await instance.registerPrinter(bob, {from: owner});
+    await instance.protectDesign(web3.utils.toHex("Valve"), {from: alice});
+    await instance.protectDesign(web3.utils.toHex("Mask"), {from: carol});
+
+    await instance.useDesign(1, {from: bob});
+    await instance.useDesign(1, {from: bob, value: 2500});
+
+    await instance.useDesign(2, {from: bob});
+    await instance.useDesign(2, {from: bob, value: 1000});
+    
+    //Alice
+    const startingAccountBalanceAlice = new BN(await web3.eth.getBalance(alice));
+    const txObj = await instance.withdrawFunds({ from: alice });
+    const withdrawGasPrice = (await web3.eth.getTransaction(txObj.tx)).gasPrice;
+    const withdrawTxPrice = withdrawGasPrice * txObj.receipt.gasUsed;
+    const newAccountBalanceAlice = new BN(await web3.eth.getBalance(alice));
+
+    //Alice's balance after calling withdrawFunds() = Alice's balance before calling withdrawFunds() plus amount withdrawn minus price of calling withdrawFunds()
+    const expectedAccountBalanceAlice= startingAccountBalanceAlice.add(new BN(2500)).sub(new BN(withdrawTxPrice));      
+    expect(new BN(newAccountBalanceAlice).eq(new BN(expectedAccountBalanceAlice))).to.be.true; 
+
+    const newContraceBalanceAlice = await instance.balances(alice, { from: alice });
+    expect(newContraceBalanceAlice.eq(new BN(0))).to.be.true; 
+
+
+    truffleAssert.eventEmitted(txObj.receipt, 'LogFundsWithdrawn', (ev) => {    
+        return ev.designer == alice && ev.balanceWithdrawn == 2500 ;
+    });   
+
+    assert.equal(txObj.receipt.logs.length, 1, 'Incorrect number of events emitted');
+
+
+     //Carol
+     const startingAccountBalanceCarol = new BN(await web3.eth.getBalance(carol));
+     const txObj2 = await instance.withdrawFunds({ from: carol });
+     const withdrawGasPriceCarol = (await web3.eth.getTransaction(txObj2.tx)).gasPrice;
+     const withdrawTxPriceCarol = withdrawGasPriceCarol * txObj2.receipt.gasUsed;
+     const newAccountBalanceCarol = new BN(await web3.eth.getBalance(carol));
+ 
+     //Carol's balance after calling withdrawFunds() = Carol's balance before calling withdrawFunds() plus amount withdrawn minus price of calling withdrawFunds()
+     const expectedAccountBalanceCarol= startingAccountBalanceCarol.add(new BN(1000)).sub(new BN(withdrawTxPrice));      
+     expect(new BN(newAccountBalanceCarol).eq(new BN(expectedAccountBalanceCarol))).to.be.true; 
+ 
+     const newContraceBalanceCarol = await instance.balances(carol, { from: carol });
+     expect(newContraceBalanceCarol.eq(new BN(0))).to.be.true; 
+ 
+ 
+     truffleAssert.eventEmitted(txObj2.receipt, 'LogFundsWithdrawn', (ev) => {    
+         return ev.designer == carol && ev.balanceWithdrawn == 1000 ;
+     });   
+ 
+     assert.equal(txObj.receipt.logs.length, 1, 'Incorrect number of events emitted');
+});
+
 });//end test contract

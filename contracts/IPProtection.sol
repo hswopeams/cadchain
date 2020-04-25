@@ -27,6 +27,7 @@ contract IPProtection is Killable {
   event LogPrinterDeregistered(address indexed printer);
   event LogDesignProtected(address indexed designer, bytes32 indexed name, uint256 id);
   event LogDesignUseApproved(address indexed printer, uint256 indexed designId, bool approved, uint256 designerBalance);
+  event LogFundsWithdrawn(address indexed designer, uint256 balanceWithdrawn);
 
   
   constructor() public {}
@@ -88,6 +89,19 @@ contract IPProtection is Killable {
     emit LogDesignUseApproved(msg.sender, designId, true, balances[design.owner]);
 
   }
+
+  function withdrawFunds() public whenAlive {
+        require(registeredDesigners[msg.sender], "Message sender is not a registered designer");
+
+        uint256 amount = balances[msg.sender];
+        require(amount > 0, "No funds to withdraw");
+        balances[msg.sender] = 0;
+        emit LogFundsWithdrawn(msg.sender, amount);
+ 
+        (bool success, ) = msg.sender.call.value(amount)("");
+        require(success, "Transfer failed.");
+   
+    }
 
 }
 

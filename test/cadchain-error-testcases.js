@@ -186,4 +186,24 @@ contract("CADChain Error Test", async accounts => {
     );
   });
 
+  it('should revert if unregistered designer tries to withdraw funds', async () => {
+    await truffleAssert.reverts(
+        instance.withdrawFunds({from: carol}),
+        "Message sender is not a registered designer"
+    );        
+  });
+
+  it('should revert if designer has no funds to withdraw', async () => {
+    await instance.registerDesigner(alice, {from: owner});
+    await instance.registerPrinter(bob, {from: owner});
+    await instance.protectDesign(web3.utils.toHex("Valve"), {from: alice});
+    await instance.useDesign(1, {from: bob}),
+
+
+   await truffleAssert.reverts(
+      instance.withdrawFunds({from: alice}),
+      "No funds to withdraw"
+   );        
+});
+
 });//end test contract
