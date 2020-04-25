@@ -1,0 +1,29 @@
+{
+  "name": "cadchain",
+  "version": "1.0.0",
+  "description": "CADChain Ethereum Prototype",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hswopeams/cadchain.git"
+  },
+  "keywords": [
+    "CADChain"
+  ],
+  "author": "Heather Swope",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/hswopeams/cadchain/issues"
+  },
+  "homepage": "https://github.com/hswopeams/cadchain#readme",
+  "devDependencies": {
+    "bn-chai": "^1.0.1",
+    "chai": "^4.2.0",
+    "truffle": "^5.1.23",
+    "truffle-assertions": "^0.9.2"
+  },
+  "dependencies": {}
+}
