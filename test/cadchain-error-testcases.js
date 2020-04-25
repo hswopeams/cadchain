@@ -54,6 +54,11 @@ contract("CADChain Error Test", async accounts => {
         instance.protectDesign(alice, {from: owner}),
         "Killable: killed"
     );
+
+    await truffleAssert.reverts(
+        instance.useDesign(alice, {from: owner}),
+        "Killable: killed"
+    );  
   
   });
 
