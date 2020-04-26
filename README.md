@@ -22,3 +22,5 @@ The contract can be paused and killed.
 
 After the contract has been killed, the owner can safeguard any funds into a safeguard account. The `balances` mapping
 is still available and can be used to refund the correct amount to each designer.
+
+The IPProtection smart contract is deployed on Ropsten and can be found [here](https://ropsten.etherscan.io/address/0xA79965FAB97a681a6529Bd068faf562eDb529C97)
