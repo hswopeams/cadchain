@@ -41,7 +41,8 @@ window.addEventListener('load', async function() {
         $("#registerPrinter").click(registerPrinter);
         $("#deregisterPrinter").click(deregisterPrinter);
         $("#protectDesign").click(protectDesign);
-       // $("#withdrawFunds").click(withdrawFunds);
+        $("#withdrawFunds").click(withdrawFunds);
+        $("#useDesign").click(useDesign);
         
     } catch(err) {
         // Never let an error go unlogged.
@@ -353,6 +354,131 @@ const protectDesign = async function() {
 
     } catch(err) {
         $("#status").html(err.toString());
+        console.error(err);
+    }
+};
+
+const withdrawFunds = async function() {
+    // Sometimes you have to force the gas amount to a value you know is enough because
+    // `web3.eth.estimateGas` may get it wrong.
+    const gas = 300000;
+
+    try {
+        const accounts = await (/*window.ethereum ?
+            window.enable() ||*/
+            web3.eth.getAccounts());
+            console.log("accounts ", accounts);
+        if (accounts.length == 0) {
+            throw new Error("No account with which to transact");
+        }
+
+        const instance = await IPProtection.deployed();
+
+        // We simulate the real call and see whether this is likely to work.
+        // No point in wasting gas if we have a likely failure.
+        const success = await instance.withdrawFunds.call(
+            { from: $("input[name='designerAddress']").val(), gas: gas });
+        if (!success) {
+            throw new Error("The transaction will fail anyway, not sending");
+        }
+
+        // Ok, we move onto the proper action.
+        const txObj = await instance.withdrawFunds(
+            { from: $("input[name='designerAddress']").val(), gas: gas })
+            // withdrawFunds takes time in real life, so we get the txHash immediately while it 
+            // is mined.
+            .on(
+                "transactionHash",
+                txHash => $("#status").html("Transaction on the way " + txHash)
+            );
+        // Now we got the mined tx.
+        const receipt = txObj.receipt;
+        
+        if (!receipt.status) {
+            console.error("Wrong status");
+            console.error(receipt);
+            $("#statusRegisterDesign").html("There was an error in the tx execution, status not 1");
+        } else if (receipt.logs.length == 0) {
+            console.error("Empty logs");
+            console.error(receipt);
+            $("#statusRegisterDesign").html("There was an error in the tx execution, missing expected event");
+        } else {
+            console.log(receipt.logs[0]);
+            $("#statusRegisterDesign").html("Transfer executed");
+        }
+
+        // Make sure we update the UI.
+       // $("#balanceContract").html(await web3.eth.getBalance(instance.address));
+
+         const designerBalance = await web3.eth.getBalance($("input[name='designerAddress']").val());
+         $("#designerBalance").html(designerBalance);
+        
+    } catch(err) {
+        $("#statusRegisterDesign").html(err.toString());
+        console.error(err);
+    }
+    
+};
+
+const useDesign = async function() {
+    // Sometimes you have to force the gas amount to a value you know is enough because
+    // `web3.eth.estimateGas` may get it wrong.
+    const gas = 300000;
+    try {
+        const accounts = await (/*window.ethereum ?
+            window.enable() ||*/
+            web3.eth.getAccounts());
+            console.log("accounts ", accounts);
+        const instance = await IPProtection.deployed();
+
+        const hexValueContentPointer = web3.utils.hexToBytes($("input[name='hashedContentPointerProtectUseDesign']").val());
+
+        // We simulate the real call and see whether this is likely to work.
+        // No point in wasting gas if we have a likely failure.
+        const success = await instance.useDesign.call(
+            hexValueContentPointer,
+            { from: $("input[name='printerAddress']").val(), value: $("input[name='amount']").val(), gas: gas });
+
+        if (!success) {
+            throw new Error("The transaction will fail anyway, not sending");
+        }
+
+        // Ok, we move onto the proper action.
+        const txObj = await instance.useDesign(
+            hexValueContentPointer,
+            { from: $("input[name='printerAddress']").val(), value: $("input[name='amount']").val(), gas: gas })
+            //transfer takes time in real life, so we get the txHash immediately while it 
+            // is mined.
+            .on(
+                "transactionHash",
+                txHash => $("#status").html("Transaction on the way " + txHash)
+            )
+            .on('receipt', function(receipt){
+                console.log("receipt in on receipt ", receipt);
+                console.log("events in on receipt ", receipt.events);
+
+            });
+        // Now we got the mined tx.
+        const receipt = txObj.receipt;
+
+        if (!receipt.status) {
+            console.error("Wrong status");
+            console.error(receipt);
+            $("#statusUseDesign").html("There was an error in the tx execution, status not 1");
+        } else if (receipt.logs.length == 0) {
+            console.error("Empty logs");
+            console.error(receipt);
+            $("#statusUseDesign").html("There was an error in the tx execution, missing expected event");
+        } else {
+            console.log("logs ", receipt.logs[0]);
+            $("#statusUseDesign").html("Design access approved");
+        }
+        
+        // Make sure we update the UI.
+       // $("#balanceContract").html(await web3.eth.getBalance(instance.address));
+
+    } catch(err) {
+        $("#statusUseDesign").html(err.toString());
         console.error(err);
     }
 };

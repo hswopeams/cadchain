@@ -9,10 +9,10 @@
 
 </head>
 <body>
-    <h1>Designers's Page</h1>
+    <h1>Designers</h1>
     <div class="spaced">
         <p class="important">
-           Designers can use this page to protect their designs and withdraw their funds.
+           Registered designers can use this page to protect their designs and withdraw their funds.
         </p>
     </div>
     <div class="spaced">
@@ -22,11 +22,44 @@
     <div class="spaced">
         Designer Address <input name="designerAddress" type="text" placeholder="0x0000000000000000000000000000000000000000" size="50" /> 
         &nbsp;
+        <br>
         <button id="protectDesign" class="button">Register Design</button>
-        <!--<button id="withdrawFunds" class="button">Withdraw Funds</button>-->
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
     </div>
-   <!--<div class="display spaced">The Remittance Contract's balance is <span id="balanceContract">Loading...</span> Wei</div> --> 
-    <div id="status" class="display spaced"></div>
+    <div class="spaced">
+        Designer Address <input name="designerAddress" type="text" placeholder="0x0000000000000000000000000000000000000000" size="50" /> 
+        &nbsp;
+        <br>
+        <button id="withdrawFunds" class="button">Withdraw Funds</button>
+    </div>
+  
+    <div id="statusRegisterDesign" class="display spaced"></div>
+    <div id="displayTransactionId" class="display spaced"></div>
+    <div class="display spaced">Designer has <span id="designerBalance">Loading...</span> Wei in funds.</div>
+
+
+    <h1>Printers</h1>
+    <div class="spaced">
+        <p class="important">
+           Registered printers can use this page to get access to registered designs
+        </p>
+    </div>
+    <div class="spaced">
+        Access Design <input name="hashedContentPointerProtectUseDesign" type="text" placeholder="0x56656e74696c61746f72506f696e746572000000000000000000000000000000" size="60" /> 
+        &nbsp;
+        <br>
+        Printer Address <input name="printerAddress" type="text" placeholder="0x0000000000000000000000000000000000000000" size="50" /> 
+        <br>
+        Payment Required After The First Access <input name="amount" type="number" placeholder="0" /> Wei
+        <br>
+        <button id="useDesign" class="button">Access Design</button>
+    </div>
+  
+    <div id="statusUseDesign" class="display spaced"></div>
     <div id="displayTransactionId" class="display spaced"></div>
 
     <script src="js/app.js"></script>
