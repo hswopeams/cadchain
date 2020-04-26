@@ -10,19 +10,27 @@
     <h4> <a href="index.html">Back to Desiger and Printer Page</a></h4>
     <h1>Admin Page</h1>
     <div class="spaced">
+        <H3>The contract owner can use this page to register printers and designers</H3>
         <p class="important">
-           The owner of this contract can use this page to register and deregister designers and printers.
-        </p>
+            <h3>Available Accounts</h3>
+            <div class="display spaced">owner:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span id="account0">.</span> </div>
+            <div class="display spaced">account1:&nbsp;&nbsp;<span id="account1"></span> </div>
+            <div class="display spaced">account2:&nbsp;&nbsp;<span id="account2"></span> </div>
+            <div class="display spaced">account3:&nbsp;&nbsp;<span id="account3"></span> </div>
+            <div class="display spaced">account4:&nbsp;&nbsp;<span id="account4"></span> </div>      
+     </p>
     </div>
     <div class="spaced">
-        Designer Address <input name="designerAddress" type="text" placeholder="0x0000000000000000000000000000000000000000" size="50" /> 
-        &nbsp;
+        Designer Address <input name="designerAddress" type="text" placeholder="0x0000000000000000000000000000000000000000" size="80" /> 
+       <br>
         <button id="registerDesigner" class="button">Register Designer</button>
         <button id="deregisterDesigner" class="button">Deregister Designer</button>
     </div>
+    <br>
+    <br>
     <div class="spaced">
-        Printer Address <input name="printerAddress" type="text" placeholder="0x0000000000000000000000000000000000000000" size="50" /> 
-        &nbsp;
+        Printer Address&nbsp;&nbsp; <input name="printerAddress" type="text" placeholder="0x0000000000000000000000000000000000000000" size="80" /> 
+        <br>
         <button id="registerPrinter" class="button">Register Printer</button>
         <button id="deregisterPrinter" class="button">Deregister Printer</button>
     </div>

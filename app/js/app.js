@@ -33,7 +33,12 @@ window.addEventListener('load', async function() {
         const network = await web3.eth.net.getId();
         const instance = await IPProtection.deployed();
  
-       // $("#balanceContract").html(await web3.eth.getBalance(instance.address));
+      
+       $("#account0").html(accounts[0]);
+       $("#account1").html(accounts[1]);
+       $("#account2").html(accounts[2]);
+       $("#account3").html(accounts[3]);
+       $("#account4").html(accounts[4]);
        
         // We wire it when the system looks in order.
         $("#registerDesigner").click(registerDesigner);
@@ -327,7 +332,7 @@ const protectDesign = async function() {
             // is mined.
             .on(
                 "transactionHash",
-                txHash => $("#status").html("Transaction on the way " + txHash)
+                txHash => $("#statusProtectDesign").html("Transaction on the way " + txHash)
             )
             .on('receipt', function(receipt){
                 console.log("receipt in on receipt ", receipt);
@@ -340,21 +345,21 @@ const protectDesign = async function() {
         if (!receipt.status) {
             console.error("Wrong status");
             console.error(receipt);
-            $("#status").html("There was an error in the tx execution, status not 1");
+            $("#statusProtectDesign").html("There was an error in the tx execution, status not 1");
         } else if (receipt.logs.length == 0) {
             console.error("Empty logs");
             console.error(receipt);
-            $("#status").html("There was an error in the tx execution, missing expected event");
+            $("#statusProtectDesign").html("There was an error in the tx execution, missing expected event");
         } else {
             console.log("logs ", receipt.logs[0]);
-            $("#status").html("Design registered");
+            $("#statusProtectDesign").html("Design registered");
         }
         
         // Make sure we update the UI.
        // $("#balanceContract").html(await web3.eth.getBalance(instance.address));
 
     } catch(err) {
-        $("#status").html(err.toString());
+        $("#statusProtectDesign").html(err.toString());
         console.error(err);
     }
 };

@@ -10,19 +10,30 @@
 </head>
 <body>
     <div class="spaced">
+        <H1>3DID</H1>
        <H3>The contract owner can use the <a href="admin.html">Admin Page</a> to register printers and designers</H3>
        <p class="important">
-            <h3>A designer and printer have already been regsitered:</h3>
-            <h5>Designer Alice has address:  </h5>
-            <h5>Printer Bob has address:  </h5>
+            <h3>Available Accounts</h3>
+            <div class="display spaced">owner:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span id="account0">.</span> </div>
+            <div class="display spaced">account1:&nbsp;&nbsp;<span id="account1"></span> </div>
+            <div class="display spaced">account2:&nbsp;&nbsp;<span id="account2"></span> </div>
+            <div class="display spaced">account3:&nbsp;&nbsp;<span id="account3"></span> </div>
+            <div class="display spaced">account4:&nbsp;&nbsp;<span id="account4"></span> </div>     
      </p>
      <p class="important">
         <h3>To Register or access a design a hash which is assumed to be a pointer to the design on IPFS or other file system must be provided. Some sample values are: </h3>
-        <h5>0x56656e74696c61746f72506f696e746572000000000000000000000000000000</h5>
-        <h5>0x56616c766532506f696e74657200000000000000000000000000000000000000</h5>
-        <h5>0x56616c7665506f696e7465720a00000000000000000000000000000000000000</h5>
- </p>
+        <div class="display spaced">0x56656e74696c61746f72506f696e746572000000000000000000000000000000<span id="design1"></span> </div>
+        <div class="display spaced">0x56616c766532506f696e74657200000000000000000000000000000000000000<span id="design1"></span> </div>
+        <div class="display spaced">0x56616c7665506f696e7465720a00000000000000000000000000000000000000<span id="design1"></span> </div>
+    </p>
+    <div class="spaced">
+        <a target="_blank" rel="noopener noreferrer"
+            href="https://blockchangers.github.io/solidity-converter-online/">This site can be used to generate more hashes</a>
     </div>
+    </div>
+    <br>
+    <br>
+    <br>
     <h1>Designers</h1>
     <div class="spaced">
         <p class="important">
@@ -30,22 +41,21 @@
         </p>
     </div>
     <div class="spaced">
-        Register Design <input name="hashedContentPointerProtect" type="text" placeholder="0x56656e74696c61746f72506f696e746572000000000000000000000000000000" size="60" /> 
+        Register Design &nbsp;&nbsp;<input name="hashedContentPointerProtect" type="text" placeholder="0x56656e74696c61746f72506f696e746572000000000000000000000000000000" size="80" /> 
         &nbsp;
     </div>
     <div class="spaced">
-        Designer Address <input name="designerAddress" type="text" placeholder="0x0000000000000000000000000000000000000000" size="50" /> 
+        Designer Address <input name="designerAddress" type="text" placeholder="0x0000000000000000000000000000000000000000" size="80" /> 
         &nbsp;
         <br>
         <button id="protectDesign" class="button">Register Design</button>
-        <br>
-        <br>
+        <div id="statusProtectDesign" class="display spaced"></div>
         <br>
         <br>
         <br>
     </div>
     <div class="spaced">
-        Designer Address <input name="designerAddressWithdraw" type="text" placeholder="0x0000000000000000000000000000000000000000" size="50" /> 
+        Designer Address <input name="designerAddressWithdraw" type="text" placeholder="0x0000000000000000000000000000000000000000" size="80" /> 
         &nbsp;
         <br>
         <button id="getBalance" class="button">Get Balance</button>
@@ -55,7 +65,7 @@
     <div id="statusRegisterDesign" class="display spaced"></div>
     <div id="displayTransactionId" class="display spaced"></div>
     <div class="display spaced">Designer has <span id="designerContractBalance">Loading...</span> Wei in funds available for withdrawal.</div>
-    <div class="display spaced">Designer has <span id="balanceContract">Loading...</span> Wei in funds own Ethereum contract</div>
+    <div class="display spaced">Designer has <span id="balanceContract">Loading...</span> Wei in own Ethereum contract</div>
     <br>
     <br>
     <br>
@@ -68,10 +78,10 @@
         </p>
     </div>
     <div class="spaced">
-        Access Design <input name="hashedContentPointerProtectUseDesign" type="text" placeholder="0x56656e74696c61746f72506f696e746572000000000000000000000000000000" size="60" /> 
+        Access Design &nbsp;<input name="hashedContentPointerProtectUseDesign" type="text" placeholder="0x56656e74696c61746f72506f696e746572000000000000000000000000000000" size="80" /> 
         &nbsp;
         <br>
-        Printer Address <input name="printerAddress" type="text" placeholder="0x0000000000000000000000000000000000000000" size="50" /> 
+        Printer Address <input name="printerAddress" type="text" placeholder="0x0000000000000000000000000000000000000000" size="80" /> 
         <br>
         Payment Required After The First Access <input name="amount" type="number" placeholder="0" /> Wei
         <br>
