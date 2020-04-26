@@ -4,11 +4,11 @@
 This IPProtection smart contract is the prototyp built for the CADChain submission during the EUvsVirus hackathon in April 2020.
 
 The smart contract can be used to protect intelectual property (IP). A design is IP. The owner of the contract can register
-designers who are allowed to protect their designs using the IPProtection smart contract. The owner can also
-register 3D printers. Designers and printers can also be deregistered by the owner.
+designers using the registerDesigner(address designer)` function. Registered designers can protect their designs using the IPProtection smart contract. The owner can also
+register 3D printers using the `registerPrinter(address printer)` function. Designers and printers can also be deregistered by the owner using the `deregisterDesigner(address designer)` and `deregisterPrinter(address printer)` functions.
 
 A designer can protect her design by calling `protectDesign(bytes32 hashedContentPointer)`. It is assumed the front-end
-has already stored the actual design on something like IPFS. Only the pointer will be stored on the blockchain.
+has already stored the actual design on something like IPFS. Only the hashed pointer will be stored on the blockchain.
 
 A 3D printer can request to use a design by calling 'useDesign(bytes32 hashedContentPointer)'. A 3D printer may
 use a design once for free. After that he must pay a fee (the prototype only requires a nominal fee of 1000 wei). The
