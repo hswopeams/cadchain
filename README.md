@@ -3,8 +3,8 @@
 
 This IPProtection smart contract is the prototyp built for the CADChain submission during the EUvsVirus hackathon in April 2020.
 
-The smart contract can be used to protect intelectual property (IP). A design is IP. The owner of the contract can register
-designers using the registerDesigner(address designer)` function. Registered designers can protect their designs using the IPProtection smart contract. The owner can also
+The smart contract can be used to protect intelectual property (IP). A design is IP that can be protected. The owner of the contract can register
+designers using the `registerDesigner(address designer)` function. Registered designers can protect their designs using the IPProtection smart contract. The owner can also
 register 3D printers using the `registerPrinter(address printer)` function. Designers and printers can also be deregistered by the owner using the `deregisterDesigner(address designer)` and `deregisterPrinter(address printer)` functions.
 
 A designer can protect her design by calling `protectDesign(bytes32 hashedContentPointer)`. It is assumed the front-end
