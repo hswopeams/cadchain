@@ -31,15 +31,17 @@
         <br>
     </div>
     <div class="spaced">
-        Designer Address <input name="designerAddress" type="text" placeholder="0x0000000000000000000000000000000000000000" size="50" /> 
+        Designer Address <input name="designerAddressWithdraw" type="text" placeholder="0x0000000000000000000000000000000000000000" size="50" /> 
         &nbsp;
         <br>
+        <button id="getBalance" class="button">Get Balance</button>
         <button id="withdrawFunds" class="button">Withdraw Funds</button>
     </div>
   
     <div id="statusRegisterDesign" class="display spaced"></div>
     <div id="displayTransactionId" class="display spaced"></div>
-    <div class="display spaced">Designer has <span id="designerBalance">Loading...</span> Wei in funds.</div>
+    <div class="display spaced">Designer has <span id="designerContractBalance">Loading...</span> Wei in funds available for withdrawal.</div>
+    <div class="display spaced">Designer has <span id="balanceContract">Loading...</span> Wei in funds own Ethereum contract</div>
 
 
     <h1>Printers</h1>

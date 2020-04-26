@@ -43,6 +43,7 @@ window.addEventListener('load', async function() {
         $("#protectDesign").click(protectDesign);
         $("#withdrawFunds").click(withdrawFunds);
         $("#useDesign").click(useDesign);
+        $("#getBalance").click(getBalance);
         
     } catch(err) {
         // Never let an error go unlogged.
@@ -377,14 +378,14 @@ const withdrawFunds = async function() {
         // We simulate the real call and see whether this is likely to work.
         // No point in wasting gas if we have a likely failure.
         const success = await instance.withdrawFunds.call(
-            { from: $("input[name='designerAddress']").val(), gas: gas });
+            { from: $("input[name='designerAddressWithdraw']").val(), gas: gas });
         if (!success) {
             throw new Error("The transaction will fail anyway, not sending");
         }
 
         // Ok, we move onto the proper action.
         const txObj = await instance.withdrawFunds(
-            { from: $("input[name='designerAddress']").val(), gas: gas })
+            { from: $("input[name='designerAddressWithdraw']").val(), gas: gas })
             // withdrawFunds takes time in real life, so we get the txHash immediately while it 
             // is mined.
             .on(
@@ -407,11 +408,13 @@ const withdrawFunds = async function() {
             $("#statusRegisterDesign").html("Transfer executed");
         }
 
-        // Make sure we update the UI.
-       // $("#balanceContract").html(await web3.eth.getBalance(instance.address));
+        const designerContractBalance = await instance.balances($("input[name='designerAddressWithdraw']").val(), { from: window.account, gas: gas });
+        $("#designerContractBalance").html(designerContractBalance.toString());
 
-         const designerBalance = await web3.eth.getBalance($("input[name='designerAddress']").val());
-         $("#designerBalance").html(designerBalance);
+        //console.log("designerContractBalance ", designerContractBalance);
+        const desginerBalance = await web3.eth.getBalance($("input[name='designerAddressWithdraw']").val());
+
+        $("#balanceContract").html(desginerBalance);
         
     } catch(err) {
         $("#statusRegisterDesign").html(err.toString());
@@ -473,9 +476,34 @@ const useDesign = async function() {
             console.log("logs ", receipt.logs[0]);
             $("#statusUseDesign").html("Design access approved");
         }
-        
-        // Make sure we update the UI.
-       // $("#balanceContract").html(await web3.eth.getBalance(instance.address));
+
+    } catch(err) {
+        $("#statusUseDesign").html(err.toString());
+        console.error(err);
+    }
+};
+
+const getBalance = async function() {
+    // Sometimes you have to force the gas amount to a value you know is enough because
+    // `web3.eth.estimateGas` may get it wrong.
+    const gas = 300000;
+    try {
+        const accounts = await (/*window.ethereum ?
+            window.enable() ||*/
+            web3.eth.getAccounts());
+            console.log("accounts ", accounts);
+        const instance = await IPProtection.deployed();
+
+       const designerContractBalance = await instance.balances($("input[name='designerAddressWithdraw']").val(), { from: window.account, gas: gas });
+       $("#designerContractBalance").html(designerContractBalance.toString());
+
+       console.log("designerContractBalance ", designerContractBalance);
+
+       const desginerBalance = await web3.eth.getBalance($("input[name='designerAddressWithdraw']").val());
+
+        $("#balanceContract").html(desginerBalance);
+
+        console.log("desginerBalance ", desginerBalance);
 
     } catch(err) {
         $("#statusUseDesign").html(err.toString());
