@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/hswopeams/cadchain#readme",
   "devDependencies": {
+    "@truffle/hdwallet-provider": "^1.0.34",
     "bn-chai": "^1.0.1",
     "chai": "^4.2.0",
     "ganache-cli": "^6.9.1",
