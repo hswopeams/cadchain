@@ -10,7 +10,7 @@ register 3D printers using the `registerPrinter(address printer)` function. Desi
 A designer can protect her design by calling `protectDesign(bytes32 hashedContentPointer)`. It is assumed the front-end
 has already stored the actual design on something like IPFS. Only the hashed pointer will be stored on the blockchain.
 
-A 3D printer can request to use a design by calling 'useDesign(bytes32 hashedContentPointer)'. A 3D printer may
+A 3D printer can request to use a design by calling `useDesign(bytes32 hashedContentPointer)`. A 3D printer may
 use a design once for free. After that he must pay a fee (the prototype only requires a nominal fee of 1000 wei). The
 fee gets allocated to the designer's balance in the contract.
 
