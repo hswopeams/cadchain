@@ -3,25 +3,14 @@
 <head>
 <title>3DID</title>
 <meta charset="utf-8">
-
-
-
-
 </head>
 <body>
     <div class="spaced">
-        <H1>3DID</H1>
-       <H3>The contract owner can use the <a href="admin.html">Admin Page</a> to register printers and designers</H3>
-       <p class="important">
-            <h3>Available Accounts</h3>
-            <div class="display spaced">owner:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span id="account0">.</span> </div>
-            <div class="display spaced">account1:&nbsp;&nbsp;<span id="account1"></span> </div>
-            <div class="display spaced">account2:&nbsp;&nbsp;<span id="account2"></span> </div>
-            <div class="display spaced">account3:&nbsp;&nbsp;<span id="account3"></span> </div>
-            <div class="display spaced">account4:&nbsp;&nbsp;<span id="account4"></span> </div>     
-     </p>
+        <h4>The contract owner can use the <a href="admin.html">Admin Page</a> to register printers and designers.</h4>
+        <h4>Printers can use the <a href="printer.html">Printer Page</a> to access designs.</h4>
+       <h1>3DID Designer Page</h1>
      <p class="important">
-        <h3>To Register or access a design a hash which is assumed to be a pointer to the design on IPFS or other file system must be provided. Some sample values are: </h3>
+        <h3>To Register or access a design,  a hash that is assumed to be a pointer to the design on IPFS or other file system must be provided. Some sample values are: </h3>
         <div class="display spaced">0x56656e74696c61746f72506f696e746572000000000000000000000000000000<span id="design1"></span> </div>
         <div class="display spaced">0x56616c766532506f696e74657200000000000000000000000000000000000000<span id="design1"></span> </div>
         <div class="display spaced">0x56616c7665506f696e7465720a00000000000000000000000000000000000000<span id="design1"></span> </div>
@@ -34,62 +23,26 @@
     <br>
     <br>
     <br>
-    <h1>Designers</h1>
+    <h2>Designers</h2>
     <div class="spaced">
         <p class="important">
            Registered designers can use this page to protect their designs and withdraw their funds.
         </p>
     </div>
-    <div class="spaced">
-        Register Design &nbsp;&nbsp;<input name="hashedContentPointerProtect" type="text" placeholder="0x56656e74696c61746f72506f696e746572000000000000000000000000000000" size="80" /> 
-        &nbsp;
-    </div>
-    <div class="spaced">
-        Designer Address <input name="designerAddress" type="text" placeholder="0x0000000000000000000000000000000000000000" size="80" /> 
-        &nbsp;
-        <br>
-        <button id="protectDesign" class="button">Register Design</button>
-        <div id="statusProtectDesign" class="display spaced"></div>
-        <br>
-        <br>
-        <br>
-    </div>
-    <div class="spaced">
-        Designer Address <input name="designerAddressWithdraw" type="text" placeholder="0x0000000000000000000000000000000000000000" size="80" /> 
-        &nbsp;
-        <br>
-        <button id="getBalance" class="button">Get Balance</button>
-        <button id="withdrawFunds" class="button">Withdraw Funds</button>
-    </div>
-  
-    <div id="statusRegisterDesign" class="display spaced"></div>
-    <div id="displayTransactionId" class="display spaced"></div>
-    <div class="display spaced">Designer has <span id="designerContractBalance">Loading...</span> Wei in funds available for withdrawal.</div>
-    <div class="display spaced">Designer has <span id="balanceContract">Loading...</span> Wei in own Ethereum contract</div>
+    <br><label for="hashedContentPointerProtect">Register Design</label><input name="hashedContentPointerProtect" type="text" placeholder="ex. 0x56656e74696c61746f72506f696e746572000000000000000000000000000000" size="80" /> 
+    <br><button id="protectDesign" class="button">Register Design</button>
+    <button id="withdrawFunds" class="button">Withdraw Funds</button>
     <br>
     <br>
+    <div class="display spaced">Current user has <span id="designerContractBalance">Loading...</span> Wei in funds available for withdrawal.</div>
+    <div class="display spaced">Current user has <span id="balanceContract">Loading...</span> Wei in own Ethereum account</div>
     <br>
     <br>
-    <br>
-    <h1>Printers</h1>
-    <div class="spaced">
-        <p class="important">
-           Registered printers can use this page to get access to registered designs
-        </p>
-    </div>
-    <div class="spaced">
-        Access Design &nbsp;<input name="hashedContentPointerProtectUseDesign" type="text" placeholder="0x56656e74696c61746f72506f696e746572000000000000000000000000000000" size="80" /> 
-        &nbsp;
-        <br>
-        Printer Address <input name="printerAddress" type="text" placeholder="0x0000000000000000000000000000000000000000" size="80" /> 
-        <br>
-        Payment Required After The First Access <input name="amount" type="number" placeholder="0" /> Wei
-        <br>
-        <button id="useDesign" class="button">Access Design</button>
-    </div>
-  
-    <div id="statusUseDesign" class="display spaced"></div>
-    <div id="displayTransactionId" class="display spaced"></div>
+    <div id="status" class="status"></div>
+    <!--
+    <div id="statusProtectDesign" class="status"></div>
+    <div id="statusWithdrawFunds" class="status"></div>
+    -->
 
     <script src="js/app.js"></script>
 

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<title>3DID</title>
+<meta charset="utf-8">
+</head>
+<body>
+    <div class="spaced">
+       <h1>3DID Printer Page</h1>
+       <h4>The contract owner can use the <a href="admin.html">Admin Page</a> to register printers and designers.</h4>
+        <h4>Designers can use the <a href="index.html">Designer Page</a> to register designs. and withdraw funds.</h4>
+     <p class="important">
+        <h3>To Register or access a design,  a hash that is assumed to be a pointer to the design on IPFS or other file system must be provided. Some sample values are: </h3>
+        <div class="display spaced">0x56656e74696c61746f72506f696e746572000000000000000000000000000000<span id="design1"></span> </div>
+        <div class="display spaced">0x56616c766532506f696e74657200000000000000000000000000000000000000<span id="design1"></span> </div>
+        <div class="display spaced">0x56616c7665506f696e7465720a00000000000000000000000000000000000000<span id="design1"></span> </div>
+    </p>
+    <div class="spaced">
+        <a target="_blank" rel="noopener noreferrer"
+            href="https://blockchangers.github.io/solidity-converter-online/">This site can be used to generate more hashes</a>
+    </div>
+    </div>
+    <br>
+    <br>
+    <h2>Printers</h2>
+    <div class="spaced">
+        <p class="important">
+           Registered printers can use this page to get access to registered designs
+        </p>
+    </div>
+    <br><label for="hashedContentPointerProtectUseDesign">Access Design</label><input name="hashedContentPointerProtectUseDesign" type="text" placeholder="ex. 0x56656e74696c61746f72506f696e746572000000000000000000000000000000" size="80" /> 
+    <br><label for="amount">Required After The First Access </label><input name="amount" type="number" placeholder="0" /> Wei
+    <br>
+    <button id="useDesign" class="button">Access Design</button>
+    <br>
+    <br>
+    <div id="statusUseDesign" class="status"></div>
+
+    <script src="js/app.js"></script>
+
+</body>
+
+</body>
+</html>

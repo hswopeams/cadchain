@@ -8,40 +8,125 @@ const $ = require("jquery");
 const iPProtectionJson = require("../../build/contracts/IPProtection.json");
 require("file-loader?name=../index.html!../index.html");
 require("file-loader?name=../admin.html!../admin.html");
+require("file-loader?name=../printer.html!../printer.html");
 
-// Supports Metamask, and other wallets that provide / inject 'web3'.
-if (typeof web3 !== 'undefined') {
-    // Use the Mist/wallet/Metamask provider.
-    window.web3 = new Web3(web3.currentProvider);
+// Supports Metamask, and other wallets that provide / inject 'ethereum' or 'web3'.
+import detectEthereumProvider from '@metamask/detect-provider';
+
+// this returns the provider, or null if it wasn't detected
+const provider = await detectEthereumProvider();
+
+if (provider) {
+  startApp(provider); // Initialize your app
 } else {
-    // Your preferred fallback.
-    window.web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545')); 
+    web3 = new Web3(new Web3.providers.HttpProvider('http://127.0.0.1:8545'));
 }
+
+function startApp(provider) {
+  // If the provider returned by detectEthereumProvider is not the same as
+  // window.ethereum, something is overwriting it, perhaps another wallet.
+  if (provider !== window.ethereum) {
+    console.error('provider !== window.ethereum');
+  } else {
+    web3 = new Web3(provider);
+  }
+  // Access the decentralized web!
+}
+
 
 const IPProtection = truffleContract(iPProtectionJson);
 IPProtection.setProvider(web3.currentProvider);
 
+/**********************************************************/
+/* Handle chain (network) and chainChanged (per EIP-1193) */
+/**********************************************************/
+
+// Normally, we would recommend the 'eth_chainId' RPC method, but it currently
+// returns incorrectly formatted chain ID values.
+let currentChainId = ethereum.chainId;
+
+ethereum.on('chainChanged', handleChainChanged);
+
+function handleChainChanged(_chainId) {
+  // We recommend reloading the page, unless you must do otherwise
+  window.location.reload();
+}
+
+/***********************************************************/
+/* Handle user accounts and accountsChanged (per EIP-1193) */
+/***********************************************************/
+
+let currentAccount = null;
+
+ethereum
+  .request({ method: 'eth_accounts' })
+  .then(handleAccountsChanged)
+  .catch((err) => {
+    // Some unexpected error.
+    // For backwards compatibility reasons, if no accounts are available,
+    // eth_accounts will return an empty array.
+    console.error(err);
+  });
+
+// Note that this event is emitted on page load.
+// If the array of accounts is non-empty, you're already
+// connected.
+ethereum.on('accountsChanged', handleAccountsChanged);
+
+// For now, 'eth_accounts' will continue to always return an array
+function handleAccountsChanged(accounts) {
+  if (accounts.length === 0) {
+    // MetaMask is locked or the user has not connected any accounts
+    console.log('No accounts available');
+  } else if (accounts[0] !== currentAccount) {
+    currentAccount = accounts[0];
+    updateGUI();
+    
+  }
+}
+
+/*********************************************/
+/* Access the user's accounts (per EIP-1102) */
+/*********************************************/
+
+// You should only attempt to request the user's accounts in response to user
+// interaction, such as a button click.
+// Otherwise, you popup-spam the user like it's 1999.
+// If you fail to retrieve the user's account(s), you should encourage the user
+// to initiate the attempt.
+function connect() {
+  ethereum
+    .request({ method: 'eth_requestAccounts' })
+    .then(handleAccountsChanged)
+    .catch((err) => {
+      if (err.code === 4001) {
+        // EIP-1193 userRejectedRequest error
+        // If this happens, the user rejected the connection request.
+        console.log('Please connect to MetaMask.');
+      } else {
+        console.error(err);
+      }
+    });
+}
+
+const updateGUI = async function() {
+    const gas = 300000;
+    const instance = await IPProtection.deployed();
+    const designerContractBalance = await instance.balances(currentAccount, { from: currentAccount, gas: gas });
+    $("#designerContractBalance").html(designerContractBalance.toString());
+
+    const desginerBalance = await web3.eth.getBalance(currentAccount);
+    $("#balanceContract").html(desginerBalance);
+}
+
 window.addEventListener('load', async function() {
     try {
-        const accounts = await (/*window.ethereum ?
-            window.enable() ||*/
-            web3.eth.getAccounts());
-            console.log("accounts ", accounts);
-        if (accounts.length == 0) {
-            throw new Error("No account with which to transact");
-        }
-        window.account = accounts[0];
-        console.log("window.account ", window.account);
 
-        const network = await web3.eth.net.getId();
+        const gas = 300000;
+        connect();
         const instance = await IPProtection.deployed();
  
-      
-       $("#account0").html(accounts[0]);
-       $("#account1").html(accounts[1]);
-       $("#account2").html(accounts[2]);
-       $("#account3").html(accounts[3]);
-       $("#account4").html(accounts[4]);
+        updateGUI();
        
         // We wire it when the system looks in order.
         $("#registerDesigner").click(registerDesigner);
@@ -51,7 +136,6 @@ window.addEventListener('load', async function() {
         $("#protectDesign").click(protectDesign);
         $("#withdrawFunds").click(withdrawFunds);
         $("#useDesign").click(useDesign);
-        $("#getBalance").click(getBalance);
         
     } catch(err) {
         // Never let an error go unlogged.
@@ -64,17 +148,15 @@ const registerDesigner = async function() {
     // `web3.eth.estimateGas` may get it wrong.
     const gas = 300000;
     try {
-        const accounts = await (/*window.ethereum ?
-            window.enable() ||*/
-            web3.eth.getAccounts());
-            console.log("accounts ", accounts);
+
+        connect();
         const instance = await IPProtection.deployed();
 
         // We simulate the real call and see whether this is likely to work.
         // No point in wasting gas if we have a likely failure.
         const success = await instance.registerDesigner.call(
             $("input[name='designerAddress']").val(),
-            { from: window.account, gas: gas });
+            { from: currentAccount, gas: gas });
 
         if (!success) {
             throw new Error("The transaction will fail anyway, not sending");
@@ -83,7 +165,7 @@ const registerDesigner = async function() {
         // Ok, we move onto the proper action.
         const txObj = await instance.registerDesigner(
             $("input[name='designerAddress']").val(),
-            { from: window.account, gas: gas })
+            { from: currentAccount, gas: gas })
             //transfer takes time in real life, so we get the txHash immediately while it 
             // is mined.
             .on(
@@ -125,17 +207,15 @@ const deregisterDesigner = async function() {
     // `web3.eth.estimateGas` may get it wrong.
     const gas = 300000;
     try {
-        const accounts = await (/*window.ethereum ?
-            window.enable() ||*/
-            web3.eth.getAccounts());
-            console.log("accounts ", accounts);
+
+        connect();
         const instance = await IPProtection.deployed();
 
         // We simulate the real call and see whether this is likely to work.
         // No point in wasting gas if we have a likely failure.
         const success = await instance.deregisterDesigner.call(
             $("input[name='designerAddress']").val(),
-            { from: window.account, gas: gas });
+            { from: currentAccount, gas: gas });
 
         if (!success) {
             throw new Error("The transaction will fail anyway, not sending");
@@ -144,7 +224,7 @@ const deregisterDesigner = async function() {
         // Ok, we move onto the proper action.
         const txObj = await instance.deregisterDesigner(
             $("input[name='designerAddress']").val(),
-            { from: window.account, gas: gas })
+            { from: currentAccount, gas: gas })
             //transfer takes time in real life, so we get the txHash immediately while it 
             // is mined.
             .on(
@@ -186,17 +266,15 @@ const registerPrinter = async function() {
     // `web3.eth.estimateGas` may get it wrong.
     const gas = 300000;
     try {
-        const accounts = await (/*window.ethereum ?
-            window.enable() ||*/
-            web3.eth.getAccounts());
-            console.log("accounts ", accounts);
+
+        connect();
         const instance = await IPProtection.deployed();
 
         // We simulate the real call and see whether this is likely to work.
         // No point in wasting gas if we have a likely failure.
         const success = await instance.registerPrinter.call(
             $("input[name='printerAddress']").val(),
-            { from: window.account, gas: gas });
+            { from: currentAccount, gas: gas });
 
         if (!success) {
             throw new Error("The transaction will fail anyway, not sending");
@@ -205,7 +283,7 @@ const registerPrinter = async function() {
         // Ok, we move onto the proper action.
         const txObj = await instance.registerPrinter(
             $("input[name='printerAddress']").val(),
-            { from: window.account, gas: gas })
+            { from: currentAccount, gas: gas })
             //transfer takes time in real life, so we get the txHash immediately while it 
             // is mined.
             .on(
@@ -248,17 +326,15 @@ const deregisterPrinter = async function() {
     // `web3.eth.estimateGas` may get it wrong.
     const gas = 300000;
     try {
-        const accounts = await (/*window.ethereum ?
-            window.enable() ||*/
-            web3.eth.getAccounts());
-            console.log("accounts ", accounts);
+        
+        connect();
         const instance = await IPProtection.deployed();
 
         // We simulate the real call and see whether this is likely to work.
         // No point in wasting gas if we have a likely failure.
         const success = await instance.deregisterPrinter.call(
             $("input[name='printerAddress']").val(),
-            { from: window.account, gas: gas });
+            { from: currentAccount, gas: gas });
 
         if (!success) {
             throw new Error("The transaction will fail anyway, not sending");
@@ -267,7 +343,7 @@ const deregisterPrinter = async function() {
         // Ok, we move onto the proper action.
         const txObj = await instance.deregisterPrinter(
             $("input[name='printerAddress']").val(),
-            { from: window.account, gas: gas })
+            { from: currentAccount, gas: gas })
             //transfer takes time in real life, so we get the txHash immediately while it 
             // is mined.
             .on(
@@ -309,10 +385,8 @@ const protectDesign = async function() {
     // `web3.eth.estimateGas` may get it wrong.
     const gas = 300000;
     try {
-        const accounts = await (/*window.ethereum ?
-            window.enable() ||*/
-            web3.eth.getAccounts());
-            console.log("accounts ", accounts);
+        
+        connect();
         const instance = await IPProtection.deployed();
 
         const hexValueContentPointer = web3.utils.hexToBytes($("input[name='hashedContentPointerProtect']").val());
@@ -321,7 +395,7 @@ const protectDesign = async function() {
         // No point in wasting gas if we have a likely failure.
         const success = await instance.protectDesign.call(
             hexValueContentPointer,
-            { from: $("input[name='designerAddress']").val(), gas: gas });
+            { from: currentAccount, gas: gas });
 
         if (!success) {
             throw new Error("The transaction will fail anyway, not sending");
@@ -330,12 +404,12 @@ const protectDesign = async function() {
         // Ok, we move onto the proper action.
         const txObj = await instance.protectDesign(
             hexValueContentPointer,
-            { from: $("input[name='designerAddress']").val(), gas: gas })
+            { from: currentAccount, gas: gas })
             //transfer takes time in real life, so we get the txHash immediately while it 
             // is mined.
             .on(
                 "transactionHash",
-                txHash => $("#statusProtectDesign").html("Transaction on the way " + txHash)
+                txHash => $("#status").html("Transaction on the way " + txHash)
             )
             .on('receipt', function(receipt){
                 console.log("receipt in on receipt ", receipt);
@@ -348,21 +422,20 @@ const protectDesign = async function() {
         if (!receipt.status) {
             console.error("Wrong status");
             console.error(receipt);
-            $("#statusProtectDesign").html("There was an error in the tx execution, status not 1");
+            $("#status").html("There was an error in the tx execution, status not 1");
         } else if (receipt.logs.length == 0) {
             console.error("Empty logs");
             console.error(receipt);
-            $("#statusProtectDesign").html("There was an error in the tx execution, missing expected event");
+            $("#status").html("There was an error in the tx execution, missing expected event");
         } else {
             console.log("logs ", receipt.logs[0]);
-            $("#statusProtectDesign").html("Design registered");
+            $("#status").html("Design registered");
         }
         
-        // Make sure we update the UI.
-       // $("#balanceContract").html(await web3.eth.getBalance(instance.address));
+        updateGUI();
 
     } catch(err) {
-        $("#statusProtectDesign").html(err.toString());
+        $("#status").html(err.toString());
         console.error(err);
     }
 };
@@ -373,27 +446,21 @@ const withdrawFunds = async function() {
     const gas = 300000;
 
     try {
-        const accounts = await (/*window.ethereum ?
-            window.enable() ||*/
-            web3.eth.getAccounts());
-            console.log("accounts ", accounts);
-        if (accounts.length == 0) {
-            throw new Error("No account with which to transact");
-        }
-
+        
+        connect();
         const instance = await IPProtection.deployed();
 
         // We simulate the real call and see whether this is likely to work.
         // No point in wasting gas if we have a likely failure.
         const success = await instance.withdrawFunds.call(
-            { from: $("input[name='designerAddressWithdraw']").val(), gas: gas });
+            { from: currentAccount, gas: gas });
         if (!success) {
             throw new Error("The transaction will fail anyway, not sending");
         }
 
         // Ok, we move onto the proper action.
         const txObj = await instance.withdrawFunds(
-            { from: $("input[name='designerAddressWithdraw']").val(), gas: gas })
+            { from: currentAccount, gas: gas })
             // withdrawFunds takes time in real life, so we get the txHash immediately while it 
             // is mined.
             .on(
@@ -406,26 +473,20 @@ const withdrawFunds = async function() {
         if (!receipt.status) {
             console.error("Wrong status");
             console.error(receipt);
-            $("#statusRegisterDesign").html("There was an error in the tx execution, status not 1");
+            $("#status").html("There was an error in the tx execution, status not 1");
         } else if (receipt.logs.length == 0) {
             console.error("Empty logs");
             console.error(receipt);
-            $("#statusRegisterDesign").html("There was an error in the tx execution, missing expected event");
+            $("#status").html("There was an error in the tx execution, missing expected event");
         } else {
             console.log(receipt.logs[0]);
-            $("#statusRegisterDesign").html("Transfer executed");
+            $("#status").html("Transfer executed");
         }
 
-        const designerContractBalance = await instance.balances($("input[name='designerAddressWithdraw']").val(), { from: window.account, gas: gas });
-        $("#designerContractBalance").html(designerContractBalance.toString());
-
-        //console.log("designerContractBalance ", designerContractBalance);
-        const desginerBalance = await web3.eth.getBalance($("input[name='designerAddressWithdraw']").val());
-
-        $("#balanceContract").html(desginerBalance);
+        updateGUI();
         
     } catch(err) {
-        $("#statusRegisterDesign").html(err.toString());
+        $("#status").html(err.toString());
         console.error(err);
     }
     
@@ -436,10 +497,8 @@ const useDesign = async function() {
     // `web3.eth.estimateGas` may get it wrong.
     const gas = 300000;
     try {
-        const accounts = await (/*window.ethereum ?
-            window.enable() ||*/
-            web3.eth.getAccounts());
-            console.log("accounts ", accounts);
+
+        connect();
         const instance = await IPProtection.deployed();
 
         const hexValueContentPointer = web3.utils.hexToBytes($("input[name='hashedContentPointerProtectUseDesign']").val());
@@ -448,7 +507,7 @@ const useDesign = async function() {
         // No point in wasting gas if we have a likely failure.
         const success = await instance.useDesign.call(
             hexValueContentPointer,
-            { from: $("input[name='printerAddress']").val(), value: $("input[name='amount']").val(), gas: gas });
+            { from: currentAccount, value: $("input[name='amount']").val(), gas: gas });
 
         if (!success) {
             throw new Error("The transaction will fail anyway, not sending");
@@ -457,7 +516,7 @@ const useDesign = async function() {
         // Ok, we move onto the proper action.
         const txObj = await instance.useDesign(
             hexValueContentPointer,
-            { from: $("input[name='printerAddress']").val(), value: $("input[name='amount']").val(), gas: gas })
+            { from: currentAccount, value: $("input[name='amount']").val(), gas: gas })
             //transfer takes time in real life, so we get the txHash immediately while it 
             // is mined.
             .on(
@@ -485,33 +544,7 @@ const useDesign = async function() {
             $("#statusUseDesign").html("Design access approved");
         }
 
-    } catch(err) {
-        $("#statusUseDesign").html(err.toString());
-        console.error(err);
-    }
-};
-
-const getBalance = async function() {
-    // Sometimes you have to force the gas amount to a value you know is enough because
-    // `web3.eth.estimateGas` may get it wrong.
-    const gas = 300000;
-    try {
-        const accounts = await (/*window.ethereum ?
-            window.enable() ||*/
-            web3.eth.getAccounts());
-            console.log("accounts ", accounts);
-        const instance = await IPProtection.deployed();
-
-       const designerContractBalance = await instance.balances($("input[name='designerAddressWithdraw']").val(), { from: window.account, gas: gas });
-       $("#designerContractBalance").html(designerContractBalance.toString());
-
-       console.log("designerContractBalance ", designerContractBalance);
-
-       const desginerBalance = await web3.eth.getBalance($("input[name='designerAddressWithdraw']").val());
-
-        $("#balanceContract").html(desginerBalance);
-
-        console.log("desginerBalance ", desginerBalance);
+        updateGUI();
 
     } catch(err) {
         $("#statusUseDesign").html(err.toString());
