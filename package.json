@@ -4,7 +4,9 @@
   "description": "CADChain Ethereum Prototype",
   "main": "index.js",
   "scripts": {
-    "test": "test"
+    "migrate": "./node_modules/.bin/truffle migrate",
+    "build": "./node_modules/.bin/webpack-cli --mode development",
+    "dev": "npx http-server ./build/app/ -a 0.0.0.0 -p 8000 -c-1"
   },
   "repository": {
     "type": "git",
@@ -34,7 +36,9 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^2.3.0",
+    "css-loader": "^5.0.0",
     "jquery": "^3.5.0",
+    "style-loader": "^2.0.0",
     "truffle-contract": "^4.0.31",
     "web3": "^1.2.1"
   }

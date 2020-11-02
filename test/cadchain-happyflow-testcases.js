@@ -153,8 +153,7 @@ contract("CADChain Happy Flow Test", async accounts => {
   it('should allow a designer to protect her design', async () => {
     await instance.registerDesigner(alice, {from: owner});
     const txObj = await instance.protectDesign(web3.utils.toHex("ValvePointer"), {from: alice});
-    truffleAssert.eventEmitted(txObj.receipt, 'LogDesignProtected', (ev) => {    
-       // console.log("pointer from event ", web3.utils.hexToAscii(ev.hashedContentPointer));
+    truffleAssert.eventEmitted(txObj.receipt, 'LogDesignProtected', (ev) => {
         return ev.designer == alice;
     });    
   });
@@ -168,8 +167,7 @@ contract("CADChain Happy Flow Test", async accounts => {
 
     const txObj = await instance.useDesign(contentPointer, {from: bob});
 
-    truffleAssert.eventEmitted(txObj.receipt, 'LogDesignUseApproved', (ev) => {    
-        //console.log("pointer from event ", web3.utils.hexToAscii(ev.hashedContentPointer));
+    truffleAssert.eventEmitted(txObj.receipt, 'LogDesignUseApproved', (ev) => {
         return ev.printer == bob && expect(ev.approved).to.be.true;
     });    
   });
@@ -189,8 +187,7 @@ contract("CADChain Happy Flow Test", async accounts => {
     const newContractBalanceAlice = new BN(await instance.balances(alice));
     expect(newContractBalanceAlice).to.eq.BN(3500);
 
-    truffleAssert.eventEmitted(txObj.receipt, 'LogDesignUseApproved', (ev) => {    
-        //console.log("pointer from event ", web3.utils.hexToAscii(ev.hashedContentPointer));
+    truffleAssert.eventEmitted(txObj.receipt, 'LogDesignUseApproved', (ev) => {
         return ev.printer == bob && expect(ev.approved).to.be.true;
     });    
        

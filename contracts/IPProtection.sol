@@ -72,18 +72,21 @@ contract IPProtection is Killable {
 
   function useDesign(bytes32 hashedContentPointer) public payable whenAlive {
     require(registeredPrinters[msg.sender], "Printer not registered");
-    require(designs[hashedContentPointer].owner != address(0), "Invalid design id");
 
     Design storage design = designs[hashedContentPointer];
+    
+    require(design.owner != address(0), "Invalid design id");
 
+  
     if(design.usedBy[msg.sender]) {
          require(msg.value >= 1000, "You must pay at least 1000 wei to use this design again");
     }
 
     design.usedBy[msg.sender] = true;
-    balances[design.owner] = balances[design.owner].add(msg.value);
+    uint newBalance = balances[design.owner].add(msg.value);
+    balances[design.owner] = newBalance;
    
-    emit LogDesignUseApproved(msg.sender, hashedContentPointer, true, balances[design.owner]);
+    emit LogDesignUseApproved(msg.sender, hashedContentPointer, true, newBalance);
   }
   
   function withdrawFunds() public whenAlive {

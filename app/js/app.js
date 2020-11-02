@@ -1,3 +1,6 @@
+// Import the page's CSS. Webpack will know what to do with it.
+import "../styles/app.css";
+
 const Web3 = require("web3");
 const truffleContract = require("truffle-contract");
 const $ = require("jquery");
