@@ -1,4 +1,4 @@
-# cadchain
+# CADChain
 #### CADChain EUvsVirus Ethereum Prototype
 
 This IPProtection smart contract is the prototype built for the CADChain submission during the EUvsVirus hackathon in April 2020. The dApp is called 3DID. The hackathon allowed me only 48 hours to code the prototype from scratch. 
